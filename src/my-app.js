@@ -98,7 +98,7 @@ class MyApp extends PolymerElement {
           <app-header slot="header" condenses="" reveals="">
             <app-toolbar>
               <!--<paper-icon-button icon="my-icons:menu" drawer-toggle=""></paper-icon-button>-->
-              <div main-title="">My App</div>
+              <div main-title="">WorkFlow Dataset Registration</div>
           <iron-selector selected="[[page]]" attr-for-selected="name" role="navigation">
             <!--<a name="view1" href="[[rootPath]]view1">View One</a>-->
             <!--<a name="view2" href="[[rootPath]]view2">View Two</a>-->
