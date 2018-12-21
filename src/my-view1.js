@@ -15,14 +15,19 @@ import '@polymer/paper-item/paper-item.js';
 import '@polymer/paper-listbox/paper-listbox.js';
 import '@polymer/neon-animation/neon-animatable-behavior.js';
 import '@polymer/iron-ajax/iron-ajax.js';
+import '@polymer/paper-button/paper-button.js';
+import '@vaadin/vaadin-button/vaadin-button.js';
+import '@polymer/iron-form/iron-form.js';
+
 
 
 
 class MyView1 extends PolymerElement {
-
+    static get is() { return 'my-view1'; }
   static get properties(){
     return {
-      obj:Object
+      obj:Object,
+        datasets: Object
     }
   }
   static get template() {
@@ -54,7 +59,7 @@ class MyView1 extends PolymerElement {
         
       </style>
     
-    
+  
       <div class="card">
      <h1>Select Run ID:</h1>
   <paper-dropdown-menu label="RunIds">
@@ -73,7 +78,19 @@ class MyView1 extends PolymerElement {
       <h4> Your X-API-Key is </h4>{{obj.X-Api-Key}}
     </div>
       
-     
+     <div class="card">
+     <vaadin-button id="my-button" on-click="registerDataset" raised>Register Stored Dataset</vaadin-button>
+</div>
+
+<!--<div class="card">-->
+<!--<iron-form>-->
+      <!--<form method="get" action="">-->
+        <!--<input type="text" name="name" value="Batman">-->
+        <!--<input type="checkbox" name="donuts" checked> I like donuts<br>-->
+        <!--<paper-checkbox name="cheese" value="yes" checked></paper-checkbox>-->
+      <!--</form>-->
+    <!--</iron-form>-->
+</div>
       
       <iron-ajax id="session"
         url="https://api.mint-data-catalog.org/get_session_token"
@@ -81,6 +98,16 @@ class MyView1 extends PolymerElement {
         on-response="handleResponse"
         debounce-duration="300">
     </iron-ajax>
+    
+    
+     
+      <!--<iron-ajax id="register" method="POST"-->
+        <!--url="https://api.mint-data-catalog.org/datasets/register_datasets"-->
+        <!--params='{datasets: {{datasets}}}'-->
+        <!--handle-as="json"-->
+        <!--on-response="handleResponse1"-->
+        <!--debounce-duration="300">-->
+    <!--</iron-ajax>-->
     `;
   }
 
@@ -95,6 +122,63 @@ class MyView1 extends PolymerElement {
     console.log(data.detail.response);
    this.obj=data.detail.response;
     console.log(this.obj['X-Api-Key']);
+    }
+
+    registerDataset(){
+    //this.$.session.generateRequest();
+    this.datasets= [{
+      "description":"dataset description",
+        "name": "dataset name",
+        "provenance_id": "your_provenance_id",
+        "metadata": {
+        "contact_information": {"name": "dcat_user"}
+        }
+    }];
+    console.log("ye mera");
+        console.log(this.obj);
+        var val=this.obj['X-Api-Key'];
+        $.ajax({
+            crossOrigin:true,
+            url: "https://api.mint-data-catalog.org/datasets/register_datasets",
+            type: "POST",
+            data: JSON.stringify({ datasets: this.datasets }),
+            headers:{
+              'X-Api-Key':val,
+            'Access-Control-Allow-Origin': '*',
+                'Access-Control-Allow-Methods': 'POST'},
+            cache: false,
+            timeout: 5000,
+            async: false,
+            success: function(data) {
+                console.log("Versions", data)
+            },
+
+            error: function(jqXHR, exception) {
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connected.\n Verify Network.';
+                }
+                else if (jqXHR.status == 404) {
+                    msg = 'Requested page not found. [404]';
+                }
+                else if (jqXHR.status == 500) {
+                    msg = 'Internal Server Error [500].';
+                }
+                else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                }
+                else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                }
+                else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                }
+                else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                }
+                // console.log(msg);
+            }
+        });
     }
 
 }
