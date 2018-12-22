@@ -18,6 +18,7 @@ import '@polymer/iron-ajax/iron-ajax.js';
 import '@polymer/paper-button/paper-button.js';
 import '@vaadin/vaadin-button/vaadin-button.js';
 import '@polymer/iron-form/iron-form.js';
+import '@polymer/paper-input/paper-input.js';
 
 
 
@@ -74,33 +75,45 @@ class MyView1 extends PolymerElement {
    
       </div>
       
-      <div class="card">
-      <h4> Your X-API-Key is </h4>{{obj.X-Api-Key}}
-    </div>
+      <!--<div class="card">-->
+      <!--<h4> Your X-API-Key is </h4>{{obj.X-Api-Key}}-->
+    <!--</div>-->
       
      <div class="card">
-     <vaadin-button id="my-button" on-click="registerDataset" raised>Register Stored Dataset</vaadin-button>
+     <vaadin-button id="my-button" on-click="registerDataset" raised>Call Register Dataset API</vaadin-button>
 </div>
 
-<!--<div class="card">-->
-<!--<iron-form>-->
-      <!--<form method="get" action="">-->
-        <!--<input type="text" name="name" value="Batman">-->
-        <!--<input type="checkbox" name="donuts" checked> I like donuts<br>-->
-        <!--<paper-checkbox name="cheese" value="yes" checked></paper-checkbox>-->
-      <!--</form>-->
-    <!--</iron-form>-->
+<div class="card">
+<iron-form id="form1">
+     <form method="get" action="/foo">
+      <h4>Dataset Registration Form</h4>
+   <paper-input label="Dataset Description" id="desc" name="desc"></paper-input>
+       <paper-input label="Dataset Name" id="name" name="datasetName"></paper-input>
+    <paper-input label="Provenance Id" id="prov_id" name="prov_id"></paper-input>
+    <vaadin-button id="my-button1" on-click="_submitForm" raised>Register Stored Dataset</vaadin-button>
+      </form>
+   <!--</iron-form>-->
+   
 </div>
-      
+
+
+ 
       <iron-ajax id="session"
         url="https://api.mint-data-catalog.org/get_session_token"
         handle-as="json"
         on-response="handleResponse"
         debounce-duration="300">
     </iron-ajax>
+     <template is="dom-if" if="[[_checkBVal(datasets)]]">
+    <div class="card">
+    <p>Description: {{datasets.desc}}</p>
+    <p>Name: {{datasets.datasetName}}</p>
+    <p>Provenance Id: {{datasets.prov_id}}</p>
+    </div>
+    </template>
     
-    
-     
+  
+
       <!--<iron-ajax id="register" method="POST"-->
         <!--url="https://api.mint-data-catalog.org/datasets/register_datasets"-->
         <!--params='{datasets: {{datasets}}}'-->
@@ -110,6 +123,10 @@ class MyView1 extends PolymerElement {
     <!--</iron-ajax>-->
     `;
   }
+
+    constructor() {
+        super();
+    }
 
   _itemSelected(e){
     var selectedItem=e.target.selectedItem;
@@ -181,6 +198,23 @@ class MyView1 extends PolymerElement {
         });
     }
 
+    _submitForm(event) {
+        console.log("Form submitted");
+        console.log(this.$.form1.serializeForm());
+      //  this.querySelector('.output').innerHTML = JSON.stringify(this.$.form1.favoritePizza);
+        this.datasets=this.$.form1.serializeForm();
+    }
+
+    _checkBVal(stuff){
+        console.log("Found", stuff)
+        if(stuff.length === 0){
+            return false
+        }
+        return true
+    }
 }
+
+
+
 
 window.customElements.define('my-view1', MyView1);
