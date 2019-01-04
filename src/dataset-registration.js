@@ -125,6 +125,8 @@ class DatasetRegistration extends PolymerElement {
 
     constructor() {
         super();
+
+        this.getExecutionResults();
     }
 
   _itemSelected(e){
@@ -210,6 +212,46 @@ class DatasetRegistration extends PolymerElement {
             return false
         }
         return true
+    }
+
+    getExecutionResults(){
+        $.ajax({
+            crossOrigin:true,
+            url: "http://ontosoft.isi.edu:8001/api/KnowledgeCaptureAndDiscovery/MINT-ProvenanceQueries/getAllExecutions?endpoint=http%3A%2F%2Fdisk.isi.edu%3A3030%2Fds%2Fquery",
+            type: "GET",
+            cache: false,
+            timeout: 5000,
+            async: false,
+            success: function(data) {
+                console.log("Versions", data)
+            },
+
+            error: function(jqXHR, exception) {
+                var msg = '';
+                if (jqXHR.status === 0) {
+                    msg = 'Not connected.\n Verify Network.';
+                }
+                else if (jqXHR.status == 404) {
+                    msg = 'Requested page not found. [404]';
+                }
+                else if (jqXHR.status == 500) {
+                    msg = 'Internal Server Error [500].';
+                }
+                else if (exception === 'parsererror') {
+                    msg = 'Requested JSON parse failed.';
+                }
+                else if (exception === 'timeout') {
+                    msg = 'Time out error.';
+                }
+                else if (exception === 'abort') {
+                    msg = 'Ajax request aborted.';
+                }
+                else {
+                    msg = 'Uncaught Error.\n' + jqXHR.responseText;
+                }
+                // console.log(msg);
+            }
+        });
     }
 }
 
