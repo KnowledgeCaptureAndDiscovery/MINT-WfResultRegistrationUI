@@ -147,7 +147,7 @@ class DatasetRegistration extends PolymerElement {
     this.datasets= [{
       "description":"dataset description",
         "name": "dataset name",
-        "provenance_id": "your_provenance_id",
+        "provenance_id": "1234",
         "metadata": {
         "contact_information": {"name": "dcat_user"}
         }
@@ -157,13 +157,14 @@ class DatasetRegistration extends PolymerElement {
         var val=this.obj['X-Api-Key'];
         $.ajax({
             crossOrigin:true,
+            dataType : "json",
+            contentType: "application/json; charset=utf-8",
             url: "https://api.mint-data-catalog.org/datasets/register_datasets",
             type: "POST",
             data: JSON.stringify({ datasets: this.datasets }),
-            headers:{
-              'X-Api-Key':val,
-            'Access-Control-Allow-Origin': '*',
-                'Access-Control-Allow-Methods': 'POST'},
+            headers: {
+                'X-Api-Key': val
+            },
             cache: false,
             timeout: 5000,
             async: false,
