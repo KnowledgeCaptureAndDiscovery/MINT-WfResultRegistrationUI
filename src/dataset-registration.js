@@ -23,8 +23,8 @@ import '@polymer/paper-input/paper-input.js';
 
 
 
-class MyView1 extends PolymerElement {
-    static get is() { return 'my-view1'; }
+class DatasetRegistration extends PolymerElement {
+    static get is() { return 'dataset-registration'; }
   static get properties(){
     return {
       obj:Object,
@@ -216,4 +216,4 @@ class MyView1 extends PolymerElement {
 
 
 
-window.customElements.define('my-view1', MyView1);
+window.customElements.define('dataset-registration', DatasetRegistration);

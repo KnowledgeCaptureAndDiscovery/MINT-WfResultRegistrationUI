@@ -108,7 +108,7 @@ class MyApp extends PolymerElement {
           </app-header>
 
           <iron-pages selected="[[page]]" attr-for-selected="name" role="main">
-            <my-view1 name="view1"></my-view1>
+            <dataset-registration name="dataset-registration"></dataset-registration>
             <my-view2 name="view2"></my-view2>
             <my-view3 name="view3"></my-view3>
             <my-view404 name="view404"></my-view404>
@@ -144,8 +144,8 @@ class MyApp extends PolymerElement {
      // If no page was found in the route data, page will be an empty string.
      // Show 'view1' in that case. And if the page doesn't exist, show 'view404'.
     if (!page) {
-      this.page = 'view1';
-    } else if (['view1', 'view2', 'view3'].indexOf(page) !== -1) {
+      this.page = 'dataset-registration';
+    } else if (['dataset-registration', 'view2', 'view3'].indexOf(page) !== -1) {
       this.page = page;
     } else {
       this.page = 'view404';
@@ -163,8 +163,8 @@ class MyApp extends PolymerElement {
     // Note: `polymer build` doesn't like string concatenation in the import
     // statement, so break it up.
     switch (page) {
-      case 'view1':
-        import('./my-view1.js');
+      case 'dataset-registration':
+        import('./dataset-registration.js');
         break;
       case 'view2':
         import('./my-view2.js');
