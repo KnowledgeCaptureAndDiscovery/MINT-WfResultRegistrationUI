@@ -92,7 +92,6 @@ class MyView1 extends PolymerElement {
     <paper-input label="Provenance Id" id="prov_id" name="prov_id"></paper-input>
     <vaadin-button id="my-button1" on-click="_submitForm" raised>Register Stored Dataset</vaadin-button>
       </form>
-   <!--</iron-form>-->
    
 </div>
 
@@ -151,7 +150,7 @@ class MyView1 extends PolymerElement {
         "contact_information": {"name": "dcat_user"}
         }
     }];
-    console.log("ye mera");
+
         console.log(this.obj);
         var val=this.obj['X-Api-Key'];
         $.ajax({
