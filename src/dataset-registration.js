@@ -145,9 +145,10 @@ class DatasetRegistration extends PolymerElement {
     registerDataset(){
     //this.$.session.generateRequest();
     this.datasets= [{
-      "description":"dataset description",
-        "name": "dataset name",
-        "provenance_id": "1234",
+        "record_id":"a7792c09-e3bc-445b-a3f1-5f01bfddb827",
+        "description":"Testing the dataset registration API",
+        "name": "Temperature outside",
+        "provenance_id": "28793fa8-9f2f-49b5-b052-7b65af9a44a0",
         "metadata": {
         "contact_information": {"name": "dcat_user"}
         }
