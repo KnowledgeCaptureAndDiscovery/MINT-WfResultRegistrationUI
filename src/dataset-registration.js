@@ -19,6 +19,7 @@ import '@polymer/paper-button/paper-button.js';
 import '@vaadin/vaadin-button/vaadin-button.js';
 import '@polymer/iron-form/iron-form.js';
 import '@polymer/paper-input/paper-input.js';
+import '@polymer/paper-toast/paper-toast.js';
 
 
 
@@ -28,7 +29,9 @@ class DatasetRegistration extends PolymerElement {
   static get properties(){
     return {
       obj:Object,
-        datasets: Object
+        datasets: Object,
+        prov_id:String,
+        returnDatasets:Object
     }
   }
   static get template() {
@@ -57,14 +60,28 @@ class DatasetRegistration extends PolymerElement {
          .flex-item + .flex-item {
             margin-left: 2%;
           }
+           paper-toast {
+           --paper-toast-background-color:#4285f4;
+      width: 300px;
+      margin-left: calc(50vw - 150px);
+      --paper-toast-color: #fff;
+      font-size: 15px;
+    }
+    }
+    
+     .yellow-button {
+    text-transform: none;
+    color: #eeff41;
+  }
         
       </style>
-    
-  
+   
+
+
       <div class="card">
      <h1>Select Run ID:</h1>
   <paper-dropdown-menu label="RunIds">
-      <paper-listbox slot="dropdown-content" class="dropdown-content"selected="0" on-iron-select="_itemSelected">
+      <paper-listbox slot="dropdown-content" class="dropdown-content" selected="0" on-iron-select="_itemSelected">
         <paper-item >1</paper-item>
         <paper-item >2</paper-item>
         <paper-item >3</paper-item>
@@ -79,23 +96,31 @@ class DatasetRegistration extends PolymerElement {
       <!--<h4> Your X-API-Key is </h4>{{obj.X-Api-Key}}-->
     <!--</div>-->
       
-     <div class="card">
-     <vaadin-button id="my-button" on-click="registerDataset" raised>Call Register Dataset API</vaadin-button>
-</div>
+     <!--<div class="card">-->
+     <!--<vaadin-button id="my-button" on-click="registerDataset" raised>Call Register Dataset API</vaadin-button>-->
+<!--</div>-->
 
 <div class="card">
 <iron-form id="form1">
      <form method="get" action="/foo">
-      <h4>Dataset Registration Form</h4>
+      <h1>Dataset Registration Form</h1>
+       <paper-dropdown-menu label="Provenance Ids">
+      <paper-listbox slot="dropdown-content" class="dropdown-content" selected="0" on-iron-select="_provSelected">
+        <paper-item value="28793fa8-9f2f-49b5-b052-7b65af9a44a0" >28793fa8-9f2f-49b5-b052-7b65af9a44a0</paper-item>
+      </paper-listbox>
+    </paper-dropdown-menu>
    <paper-input label="Dataset Description" id="desc" name="desc"></paper-input>
        <paper-input label="Dataset Name" id="name" name="datasetName"></paper-input>
-    <paper-input label="Provenance Id" id="prov_id" name="prov_id"></paper-input>
+    <!--<paper-input type="hidden" label="Provenance Id" id="prov_id" name="prov_id" value$="[[prov_id]]"></paper-input>-->
+    
+    </br>
     <vaadin-button id="my-button1" on-click="_submitForm" raised>Register Stored Dataset</vaadin-button>
       </form>
    
 </div>
 
 
+  <paper-toast id="toast" text="Dataset Submitted Successfully" class="fit-top" > </paper-toast>
  
       <iron-ajax id="session"
         url="https://api.mint-data-catalog.org/get_session_token"
@@ -103,11 +128,13 @@ class DatasetRegistration extends PolymerElement {
         on-response="handleResponse"
         debounce-duration="300">
     </iron-ajax>
-     <template is="dom-if" if="[[_checkBVal(datasets)]]">
+     <template is="dom-if" if="[[_checkBVal(returnDatasets)]]">
     <div class="card">
-    <p>Description: {{datasets.desc}}</p>
-    <p>Name: {{datasets.datasetName}}</p>
-    <p>Provenance Id: {{datasets.prov_id}}</p>
+    <h4>Your Submitted Data</h4>
+    <p>Record_id: {{returnDatasets.record_id}}</p>
+    <p>Description: {{returnDatasets.description}}</p>
+    <p>Name: {{returnDatasets.name}}</p>
+    <p>Provenance Id: {{returnDatasets.provenance_id}}</p>
     </div>
     </template>
     
@@ -125,7 +152,6 @@ class DatasetRegistration extends PolymerElement {
 
     constructor() {
         super();
-
         this.getExecutionResults();
     }
 
@@ -136,6 +162,10 @@ class DatasetRegistration extends PolymerElement {
 
     }
 
+    _provSelected(e){
+        this.prov_id=e.target.selectedItem.innerText;
+    }
+
     handleResponse(data){
     console.log(data.detail.response);
    this.obj=data.detail.response;
@@ -143,12 +173,13 @@ class DatasetRegistration extends PolymerElement {
     }
 
     registerDataset(){
+        var _self = this;
     //this.$.session.generateRequest();
     this.datasets= [{
         "record_id":"a7792c09-e3bc-445b-a3f1-5f01bfddb827",
-        "description":"Testing the dataset registration API",
-        "name": "Temperature outside",
-        "provenance_id": "28793fa8-9f2f-49b5-b052-7b65af9a44a0",
+        "description":this.datasets.desc,
+        "name": this.datasets.datasetName,
+        "provenance_id": this.prov_id,
         "metadata": {
         "contact_information": {"name": "dcat_user"}
         }
@@ -170,7 +201,8 @@ class DatasetRegistration extends PolymerElement {
             timeout: 5000,
             async: false,
             success: function(data) {
-                console.log("Versions", data)
+                console.log("Versions", data);
+                _self.showToast(data);
             },
 
             error: function(jqXHR, exception) {
@@ -206,6 +238,7 @@ class DatasetRegistration extends PolymerElement {
         console.log(this.$.form1.serializeForm());
       //  this.querySelector('.output').innerHTML = JSON.stringify(this.$.form1.favoritePizza);
         this.datasets=this.$.form1.serializeForm();
+        this.registerDataset();
     }
 
     _checkBVal(stuff){
@@ -214,6 +247,15 @@ class DatasetRegistration extends PolymerElement {
             return false
         }
         return true
+    }
+
+    _toggle(){
+        this.$.toast.toggle();
+    }
+
+    showToast(data){
+        this.returnDatasets=data.datasets[0];
+        this.$.toast.show();
     }
 
     getExecutionResults(){
