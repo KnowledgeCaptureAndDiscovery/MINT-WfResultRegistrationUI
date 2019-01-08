@@ -41,6 +41,28 @@ $_documentContainer.innerHTML = `<dom-module id="shared-styles">
         color: #212121;
         font-size: 22px;
       }
+      
+       .box {
+          @apply --layout-vertical;
+
+          background-color: #FEFEFE;
+          border: 1px solid var(--app-accent-color);
+          border-radius: 4px;
+          background-size: 100% auto;
+          background-position: 0px 24px;
+
+          margin: 50px;
+          margin-left: 50px;
+          min-height: 190px;
+
+          display: block;
+          text-decoration: none;
+          text-align: center;
+          position: relative;
+          width: 47.5%;
+          padding: 15px;
+          alignment: center;
+        }
     </style>
   </template>
 </dom-module>`;

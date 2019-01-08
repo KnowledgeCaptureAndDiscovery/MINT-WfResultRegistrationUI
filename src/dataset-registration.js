@@ -20,6 +20,7 @@ import '@vaadin/vaadin-button/vaadin-button.js';
 import '@polymer/iron-form/iron-form.js';
 import '@polymer/paper-input/paper-input.js';
 import '@polymer/paper-toast/paper-toast.js';
+import '@vaadin/vaadin-text-field/vaadin-text-area.js';
 
 
 
@@ -31,7 +32,9 @@ class DatasetRegistration extends PolymerElement {
       obj:Object,
         datasets: Object,
         prov_id:String,
-        returnDatasets:Object
+        returnDatasets:Object,
+        metadata:Array,
+        errorString:String
     }
   }
   static get template() {
@@ -67,12 +70,26 @@ class DatasetRegistration extends PolymerElement {
       --paper-toast-color: #fff;
       font-size: 15px;
     }
-    }
+    vaadin-text-area.max-height {
+    max-height: 20000px; 
+    width:100%;
+  }
     
      .yellow-button {
     text-transform: none;
     color: #eeff41;
-  }
+    }
+    
+    .red-button {
+    text-transform: none;
+    background-color: red;
+    }
+    
+     .inline {
+      display: inline;
+      width: 20px;
+    }
+  
         
       </style>
    
@@ -109,11 +126,24 @@ class DatasetRegistration extends PolymerElement {
         <paper-item value="28793fa8-9f2f-49b5-b052-7b65af9a44a0" >28793fa8-9f2f-49b5-b052-7b65af9a44a0</paper-item>
       </paper-listbox>
     </paper-dropdown-menu>
-   <paper-input label="Dataset Description" id="desc" name="desc"></paper-input>
-       <paper-input label="Dataset Name" id="name" name="datasetName"></paper-input>
+    <paper-input label="Dataset Name" id="name" name="datasetName" ></paper-input>
+   <!--<paper-input label="Dataset Description" id="desc" name="desc" ></paper-input>-->
+    <vaadin-text-area label="Dataset Description" class="max-height" placeholder="Write Description of the Dataset" name="desc"></vaadin-text-area>
+        <br>
+        <vaadin-text-area label="Additional Metadata" class="max-height" placeholder="Add metadata in JSON format and in case of no data write {}" name="metadata"></vaadin-text-area>
+        <br>
+        <br>
     <!--<paper-input type="hidden" label="Provenance Id" id="prov_id" name="prov_id" value$="[[prov_id]]"></paper-input>-->
-    
-    </br>
+                    <!--<template is="dom-repeat" items="{{metadata}}">-->
+														<!---->
+							<!--<div class="inline">-->
+								<!--<paper-input  label="key" slot="prefix" value="[[metadata.key]]"></paper-input>-->
+								<!--<paper-input  label="value" slot="suffix" value="{{metadata.value}}"></paper-input>-->
+						<!--</div>		-->
+
+				<!--</template>-->
+				<!--<paper-icon-button icon="icons:done" on-click="addData"></paper-icon-button>-->
+				<!--<paper-icon-button icon="icons:delete" on-click="removeData"></paper-icon-button>-->
     <vaadin-button id="my-button1" on-click="_submitForm" raised>Register Stored Dataset</vaadin-button>
       </form>
    
@@ -121,6 +151,8 @@ class DatasetRegistration extends PolymerElement {
 
 
   <paper-toast id="toast" text="Dataset Submitted Successfully" class="fit-top" > </paper-toast>
+  
+  <paper-toast class="red-button" id="toast1" text="There was some error" class="fit-top" > </paper-toast>
  
       <iron-ajax id="session"
         url="https://api.mint-data-catalog.org/get_session_token"
@@ -135,7 +167,14 @@ class DatasetRegistration extends PolymerElement {
     <p>Description: {{returnDatasets.description}}</p>
     <p>Name: {{returnDatasets.name}}</p>
     <p>Provenance Id: {{returnDatasets.provenance_id}}</p>
+    <p>Metadata: {{returnDatasets.json_metadata}}</p>
     </div>
+    </template>
+    
+   <template is="dom-if" if="[[_checkBVal(errorString)]]">
+    <div class="card">
+    <p>Error: {{errorString}}</p>
+   </div>
     </template>
     
   
@@ -153,6 +192,8 @@ class DatasetRegistration extends PolymerElement {
     constructor() {
         super();
         this.getExecutionResults();
+        this.metadata=[];
+        this.push('metadata',{key:"",value:""});
     }
 
   _itemSelected(e){
@@ -180,9 +221,10 @@ class DatasetRegistration extends PolymerElement {
         "description":this.datasets.desc,
         "name": this.datasets.datasetName,
         "provenance_id": this.prov_id,
-        "metadata": {
-        "contact_information": {"name": "dcat_user"}
-        }
+        "metadata":this.datasets.metadata
+        // "metadata": {
+        // "contact_information": {"name": "dcat_user"}
+        // }
     }];
 
         console.log(this.obj);
@@ -228,7 +270,8 @@ class DatasetRegistration extends PolymerElement {
                 else {
                     msg = 'Uncaught Error.\n' + jqXHR.responseText;
                 }
-                // console.log(msg);
+                console.log("ye, s"+msg);
+             _self.showError(msg);
             }
         });
     }
@@ -249,13 +292,33 @@ class DatasetRegistration extends PolymerElement {
         return true
     }
 
+    _checkNegBVal(stuff){
+        console.log("Found", stuff)
+        if(stuff.length === 0){
+            return true
+        }
+        return false
+    }
+
     _toggle(){
         this.$.toast.toggle();
     }
 
     showToast(data){
+        this.errorString="";
         this.returnDatasets=data.datasets[0];
         this.$.toast.show();
+    }
+
+    showError(msg){
+        this.returnDatasets=[];
+        this.errorString=msg;
+        this.$.toast1.show();
+    }
+
+    addData(){
+
+        this.push('metadata',{key:"",value:""});
     }
 
     getExecutionResults(){
