@@ -21,6 +21,7 @@ import '@polymer/iron-form/iron-form.js';
 import '@polymer/paper-input/paper-input.js';
 import '@polymer/paper-toast/paper-toast.js';
 import '@vaadin/vaadin-text-field/vaadin-text-area.js';
+import '@polymer/paper-checkbox/paper-checkbox.js';
 
 
 
@@ -34,7 +35,9 @@ class DatasetRegistration extends PolymerElement {
         prov_id:String,
         returnDatasets:Object,
         metadata:Array,
-        errorString:String
+        errorString:String,
+        runIds:Array,
+        executionResults:Array
     }
   }
   static get template() {
@@ -63,7 +66,7 @@ class DatasetRegistration extends PolymerElement {
          .flex-item + .flex-item {
             margin-left: 2%;
           }
-           paper-toast {
+       paper-toast {
            --paper-toast-background-color:#4285f4;
       width: 300px;
       margin-left: calc(50vw - 150px);
@@ -89,24 +92,40 @@ class DatasetRegistration extends PolymerElement {
       display: inline;
       width: 20px;
     }
-  
+    
+    .custom {
+      width: 100%;
+    }
+    
+    paper-checkbox .title {
+      display: block;
+      font-size: 1.2em;
+    }
+
+    paper-checkbox .subtitle {
+      display: block;
+      font-size: 0.9em;
+      max-width: 150px;
+    }
         
       </style>
    
 
 
       <div class="card">
+    
      <h1>Select Run ID:</h1>
-  <paper-dropdown-menu label="RunIds">
-      <paper-listbox slot="dropdown-content" class="dropdown-content" selected="0" on-iron-select="_itemSelected">
-        <paper-item >1</paper-item>
-        <paper-item >2</paper-item>
-        <paper-item >3</paper-item>
-        <paper-item >4</paper-itemlabel>
+  <paper-dropdown-menu label="RunIds" class="custom">
+      <paper-listbox slot="dropdown-content" class="dropdown-content custom"  on-iron-select="_itemSelected">
+        <dom-repeat items="{{runIds}}">
+            <template>
+              <paper-item>[[item]]</paper-item>
+            </template>
+          </dom-repeat>
       </paper-listbox>
     </paper-dropdown-menu>
     
-   
+  
       </div>
       
       <!--<div class="card">-->
@@ -116,6 +135,22 @@ class DatasetRegistration extends PolymerElement {
      <!--<div class="card">-->
      <!--<vaadin-button id="my-button" on-click="registerDataset" raised>Call Register Dataset API</vaadin-button>-->
 <!--</div>-->
+
+
+ <template is="dom-if" if="[[_checkBVal(executionResults)]]">
+ <div class="card">
+  <dom-repeat items="{{executionResults}}">
+            <template>
+            <p>
+            <paper-checkbox>
+             <span class="title">[[item.label.value]]</span>
+    <span class="subtitle">[[item.result.value]]</span></paper-checkbox>
+    </p>
+            </template>
+          </dom-repeat>
+</div>
+</template>
+
 
 <div class="card">
 <iron-form id="form1">
@@ -177,7 +212,6 @@ class DatasetRegistration extends PolymerElement {
    </div>
     </template>
     
-  
 
       <!--<iron-ajax id="register" method="POST"-->
         <!--url="https://api.mint-data-catalog.org/datasets/register_datasets"-->
@@ -193,6 +227,7 @@ class DatasetRegistration extends PolymerElement {
         super();
         this.getExecutionResults();
         this.metadata=[];
+        this.executionResults="";
         this.push('metadata',{key:"",value:""});
     }
 
@@ -200,7 +235,54 @@ class DatasetRegistration extends PolymerElement {
     var selectedItem=e.target.selectedItem;
     console.log(selectedItem.innerText);
     this.$.session.generateRequest();
+    var _self=this;
 
+      $.ajax({
+          url: "http://ontosoft.isi.edu:8001/api/KnowledgeCaptureAndDiscovery/MINT-ProvenanceQueries/getExecutionResults",
+          type: "GET",
+          data:{
+              exec: selectedItem.innerText
+          },
+          cache: false,
+          timeout: 5000,
+          async: false,
+          success: function(data) {
+             console.log(data);
+             _self.process(data);
+
+          },
+          error: function(jqXHR, exception) {
+              var msg = '';
+              if (jqXHR.status === 0) {
+                  msg = 'Not connected.\n Verify Network.';
+              }
+              else if (jqXHR.status == 404) {
+                  msg = 'Requested page not found. [404]';
+              }
+              else if (jqXHR.status == 500) {
+                  msg = 'Internal Server Error [500].';
+              }
+              else if (exception === 'parsererror') {
+                  msg = 'Requested JSON parse failed.';
+              }
+              else if (exception === 'timeout') {
+                  msg = 'Time out error.';
+              }
+              else if (exception === 'abort') {
+                  msg = 'Ajax request aborted.';
+              }
+              else {
+                  msg = 'Uncaught Error.\n' + jqXHR.responseText;
+              }
+          }
+      });
+
+    }
+
+    process(data){
+        var obj = JSON.parse(JSON.stringify(data));
+        console.log(obj);
+        this.executionResults=obj.results.bindings;
     }
 
     _provSelected(e){
@@ -211,6 +293,12 @@ class DatasetRegistration extends PolymerElement {
     console.log(data.detail.response);
    this.obj=data.detail.response;
     console.log(this.obj['X-Api-Key']);
+    }
+
+    handle(data){
+        console.log(data.detail.response);
+        this.obj=data.detail.response;
+        console.log(this.obj);
     }
 
     registerDataset(){
@@ -321,7 +409,27 @@ class DatasetRegistration extends PolymerElement {
         this.push('metadata',{key:"",value:""});
     }
 
+    processExecutionReuslt(data){
+        var obj = JSON.parse(JSON.stringify(data));
+        var vars = [];
+        //this.unModifiedConfigurationResults=JSON.parse(JSON.stringify(data));
+        for(var i = 0; i < obj.results.bindings.length; ++i) {
+            for(var key in obj.results.bindings[i]) {
+
+                if(obj.results.bindings[i][key].type.includes("uri")) {
+                    var strs = obj.results.bindings[i][key].value;
+                    vars.push(strs);
+
+                }
+            }
+        }
+        console.log("this is config");
+        console.log(vars[0]);
+        this.runIds=vars;
+    }
+
     getExecutionResults(){
+        var _self=this;
         $.ajax({
             crossOrigin:true,
             url: "http://ontosoft.isi.edu:8001/api/KnowledgeCaptureAndDiscovery/MINT-ProvenanceQueries/getAllExecutions?endpoint=http%3A%2F%2Fdisk.isi.edu%3A3030%2Fds%2Fquery",
@@ -331,6 +439,7 @@ class DatasetRegistration extends PolymerElement {
             async: false,
             success: function(data) {
                 console.log("Versions", data)
+               _self.processExecutionReuslt(data);
             },
 
             error: function(jqXHR, exception) {
@@ -360,6 +469,8 @@ class DatasetRegistration extends PolymerElement {
             }
         });
     }
+
+
 }
 
 
