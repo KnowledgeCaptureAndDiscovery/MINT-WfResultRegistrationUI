@@ -139,6 +139,7 @@ class DatasetRegistration extends PolymerElement {
 
  <template is="dom-if" if="[[_checkBVal(executionResults)]]">
  <div class="card">
+  <h1>Execution Results:</h1>
   <dom-repeat items="{{executionResults}}">
             <template>
             <p>
