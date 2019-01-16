@@ -37,7 +37,8 @@ class DatasetRegistration extends PolymerElement {
         metadata:Array,
         errorString:String,
         runIds:Array,
-        executionResults:Array
+        executionResults:Array,
+        registerDatasetArray:Array
     }
   }
   static get template() {
@@ -143,47 +144,48 @@ class DatasetRegistration extends PolymerElement {
   <dom-repeat items="{{executionResults}}">
             <template>
             <p>
-            <paper-checkbox>
+            <paper-checkbox checked="{{item.checked}}" value="[[item.label.value]]" on-change="checkBox">
              <span class="title">[[item.label.value]]</span>
     <span class="subtitle">[[item.result.value]]</span></paper-checkbox>
     </p>
             </template>
           </dom-repeat>
+           <vaadin-button id="my-button1" on-click="registerDataset" raised>Register Checked Dataset</vaadin-button>
 </div>
 </template>
 
 
-<div class="card">
-<iron-form id="form1">
-     <form method="get" action="/foo">
-      <h1>Dataset Registration Form</h1>
-       <paper-dropdown-menu label="Provenance Ids">
-      <paper-listbox slot="dropdown-content" class="dropdown-content" selected="0" on-iron-select="_provSelected">
-        <paper-item value="28793fa8-9f2f-49b5-b052-7b65af9a44a0" >28793fa8-9f2f-49b5-b052-7b65af9a44a0</paper-item>
-      </paper-listbox>
-    </paper-dropdown-menu>
-    <paper-input label="Dataset Name" id="name" name="datasetName" ></paper-input>
-   <!--<paper-input label="Dataset Description" id="desc" name="desc" ></paper-input>-->
-    <vaadin-text-area label="Dataset Description" class="max-height" placeholder="Write Description of the Dataset" name="desc"></vaadin-text-area>
-        <br>
-        <vaadin-text-area label="Additional Metadata" class="max-height" placeholder="Add metadata in JSON format and in case of no data write {}" name="metadata"></vaadin-text-area>
-        <br>
-        <br>
-    <!--<paper-input type="hidden" label="Provenance Id" id="prov_id" name="prov_id" value$="[[prov_id]]"></paper-input>-->
-                    <!--<template is="dom-repeat" items="{{metadata}}">-->
-														<!---->
-							<!--<div class="inline">-->
-								<!--<paper-input  label="key" slot="prefix" value="[[metadata.key]]"></paper-input>-->
-								<!--<paper-input  label="value" slot="suffix" value="{{metadata.value}}"></paper-input>-->
-						<!--</div>		-->
+<!--<div class="card">-->
+<!--<iron-form id="form1">-->
+     <!--<form method="get" action="/foo">-->
+      <!--<h1>Dataset Registration Form</h1>-->
+       <!--<paper-dropdown-menu label="Provenance Ids">-->
+      <!--<paper-listbox slot="dropdown-content" class="dropdown-content" selected="0" on-iron-select="_provSelected">-->
+        <!--<paper-item value="28793fa8-9f2f-49b5-b052-7b65af9a44a0" >28793fa8-9f2f-49b5-b052-7b65af9a44a0</paper-item>-->
+      <!--</paper-listbox>-->
+    <!--</paper-dropdown-menu>-->
+    <!--<paper-input label="Dataset Name" id="name" name="datasetName" ></paper-input>-->
+   <!--&lt;!&ndash;<paper-input label="Dataset Description" id="desc" name="desc" ></paper-input>&ndash;&gt;-->
+    <!--<vaadin-text-area label="Dataset Description" class="max-height" placeholder="Write Description of the Dataset" name="desc"></vaadin-text-area>-->
+        <!--<br>-->
+        <!--<vaadin-text-area label="Additional Metadata" class="max-height" placeholder="Add metadata in JSON format and in case of no data write {}" name="metadata"></vaadin-text-area>-->
+        <!--<br>-->
+        <!--<br>-->
+    <!--&lt;!&ndash;<paper-input type="hidden" label="Provenance Id" id="prov_id" name="prov_id" value$="[[prov_id]]"></paper-input>&ndash;&gt;-->
+                    <!--&lt;!&ndash;<template is="dom-repeat" items="{{metadata}}">&ndash;&gt;-->
+														<!--&lt;!&ndash;&ndash;&gt;-->
+							<!--&lt;!&ndash;<div class="inline">&ndash;&gt;-->
+								<!--&lt;!&ndash;<paper-input  label="key" slot="prefix" value="[[metadata.key]]"></paper-input>&ndash;&gt;-->
+								<!--&lt;!&ndash;<paper-input  label="value" slot="suffix" value="{{metadata.value}}"></paper-input>&ndash;&gt;-->
+						<!--&lt;!&ndash;</div>		&ndash;&gt;-->
 
-				<!--</template>-->
-				<!--<paper-icon-button icon="icons:done" on-click="addData"></paper-icon-button>-->
-				<!--<paper-icon-button icon="icons:delete" on-click="removeData"></paper-icon-button>-->
-    <vaadin-button id="my-button1" on-click="_submitForm" raised>Register Stored Dataset</vaadin-button>
-      </form>
-   
-</div>
+				<!--&lt;!&ndash;</template>&ndash;&gt;-->
+				<!--&lt;!&ndash;<paper-icon-button icon="icons:done" on-click="addData"></paper-icon-button>&ndash;&gt;-->
+				<!--&lt;!&ndash;<paper-icon-button icon="icons:delete" on-click="removeData"></paper-icon-button>&ndash;&gt;-->
+    <!--<vaadin-button id="my-button1" on-click="_submitForm" raised>Register Stored Dataset</vaadin-button>-->
+      <!--</form>-->
+   <!---->
+<!--</div>-->
 
 
   <paper-toast id="toast" text="Dataset Submitted Successfully" class="fit-top" > </paper-toast>
@@ -196,15 +198,23 @@ class DatasetRegistration extends PolymerElement {
         on-response="handleResponse"
         debounce-duration="300">
     </iron-ajax>
+     
      <template is="dom-if" if="[[_checkBVal(returnDatasets)]]">
+     
+   
     <div class="card">
-    <h4>Your Submitted Data</h4>
-    <p>Record_id: {{returnDatasets.record_id}}</p>
-    <p>Description: {{returnDatasets.description}}</p>
-    <p>Name: {{returnDatasets.name}}</p>
-    <p>Provenance Id: {{returnDatasets.provenance_id}}</p>
-    <p>Metadata: {{returnDatasets.json_metadata}}</p>
+     <h1>Your Submitted Data</h1>
+      <dom-repeat items="{{returnDatasets}}">
+      <template>
+     <p>Provenance Id: {{item.provenance_id}}</p>
+   <p>Record_id: {{item.record_id}}</p>
+    <p>Name: {{item.name}}</p>
+    <p>Description: {{item.description}}</p>
+    <p>Metadata: {{item.json_metadata}}</p>
+    </template>
+    </dom-repeat>
     </div>
+    
     </template>
     
    <template is="dom-if" if="[[_checkBVal(errorString)]]">
@@ -228,11 +238,14 @@ class DatasetRegistration extends PolymerElement {
         super();
         this.getExecutionResults();
         this.metadata=[];
-        this.executionResults="";
+        this.executionResults=[];
+        this.registerDatasetArray=[];
         this.push('metadata',{key:"",value:""});
     }
 
   _itemSelected(e){
+
+        this.registerDatasetArray=[];
     var selectedItem=e.target.selectedItem;
     console.log(selectedItem.innerText);
     this.$.session.generateRequest();
@@ -283,7 +296,18 @@ class DatasetRegistration extends PolymerElement {
     process(data){
         var obj = JSON.parse(JSON.stringify(data));
         console.log(obj);
-        this.executionResults=obj.results.bindings;
+        var temp=[];
+        for(var i = 0; i < obj.results.bindings.length; ++i) {
+            var label=obj.results.bindings[i].label;
+            var result=obj.results.bindings[i].result;
+            temp.push({"label":label,"result":result,"checked":false});
+            // this.push('executionResults',{label:label,result:result,checked:false});
+        }
+        //this.push(this.executionResults,obj.results.bindings);
+       // this.executionResults=obj.results.bindings;
+        // this.notifyPath(this.executionResults);
+        this.set('executionResults', temp);
+        console.log(this.executionResults);
     }
 
     _provSelected(e){
@@ -303,18 +327,24 @@ class DatasetRegistration extends PolymerElement {
     }
 
     registerDataset(){
+        var data=[];
+
+        var temp=this.registerDatasetArray.length;
+        console.log(temp);
+        for(var i = 0; i < temp; ++i) {
+            var dataset= {
+                "record_id":"a7792c09-e3bc-445b-a3f1-5f01bfddb827",
+                "description":this.registerDatasetArray[i],
+                "name": this.registerDatasetArray[i],
+                "provenance_id": "28793fa8-9f2f-49b5-b052-7b65af9a44a0",
+                "metadata":"{}"
+            };
+            data.push(dataset);
+        }
+        console.log(data);
         var _self = this;
     //this.$.session.generateRequest();
-    this.datasets= [{
-        "record_id":"a7792c09-e3bc-445b-a3f1-5f01bfddb827",
-        "description":this.datasets.desc,
-        "name": this.datasets.datasetName,
-        "provenance_id": this.prov_id,
-        "metadata":this.datasets.metadata
-        // "metadata": {
-        // "contact_information": {"name": "dcat_user"}
-        // }
-    }];
+    this.datasets= data;
 
         console.log(this.obj);
         var val=this.obj['X-Api-Key'];
@@ -324,7 +354,7 @@ class DatasetRegistration extends PolymerElement {
             contentType: "application/json; charset=utf-8",
             url: "https://api.mint-data-catalog.org/datasets/register_datasets",
             type: "POST",
-            data: JSON.stringify({ datasets: this.datasets }),
+            data: JSON.stringify({ datasets: data }),
             headers: {
                 'X-Api-Key': val
             },
@@ -332,7 +362,7 @@ class DatasetRegistration extends PolymerElement {
             timeout: 5000,
             async: false,
             success: function(data) {
-                console.log("Versions", data);
+                console.log("Datasets", data);
                 _self.showToast(data);
             },
 
@@ -359,7 +389,7 @@ class DatasetRegistration extends PolymerElement {
                 else {
                     msg = 'Uncaught Error.\n' + jqXHR.responseText;
                 }
-                console.log("ye, s"+msg);
+                console.log(msg);
              _self.showError(msg);
             }
         });
@@ -395,7 +425,7 @@ class DatasetRegistration extends PolymerElement {
 
     showToast(data){
         this.errorString="";
-        this.returnDatasets=data.datasets[0];
+        this.returnDatasets=data.datasets;
         this.$.toast.show();
     }
 
@@ -439,7 +469,7 @@ class DatasetRegistration extends PolymerElement {
             timeout: 5000,
             async: false,
             success: function(data) {
-                console.log("Versions", data)
+                console.log("Run-IDs", data)
                _self.processExecutionReuslt(data);
             },
 
@@ -466,9 +496,26 @@ class DatasetRegistration extends PolymerElement {
                 else {
                     msg = 'Uncaught Error.\n' + jqXHR.responseText;
                 }
-                // console.log(msg);
+                 console.log(msg);
             }
         });
+    }
+
+    checkBox(event){
+
+        if(event.target.checked) {
+            this.push('registerDatasetArray',event.target.value);
+        }
+        else{
+            if(this.registerDatasetArray.includes(event.target.value)){
+                var index = this.registerDatasetArray.indexOf(event.target.value);
+                if (index > -1) {
+                    this.registerDatasetArray.splice(index, 1);
+                }
+            }
+        }
+        console.log(this.registerDatasetArray);
+
     }
 
 
