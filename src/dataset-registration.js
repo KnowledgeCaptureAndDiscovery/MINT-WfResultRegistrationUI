@@ -22,6 +22,10 @@ import '@polymer/paper-input/paper-input.js';
 import '@polymer/paper-toast/paper-toast.js';
 import '@vaadin/vaadin-text-field/vaadin-text-area.js';
 import '@polymer/paper-checkbox/paper-checkbox.js';
+import '@polymer/iron-collapse/iron-collapse.js';
+import '@polymer/paper-icon-button/paper-icon-button.js';
+import '@polymer/iron-icons/iron-icons.js';
+
 
 
 
@@ -141,20 +145,44 @@ class DatasetRegistration extends PolymerElement {
  <template is="dom-if" if="[[_checkBVal(executionResults)]]">
  <div class="card">
   <h1>Execution Results:</h1>
-  <dom-repeat items="{{executionResults}}">
-            <template>
-            <p>
+  <template is="dom-repeat" items="{{executionResults}}">
+  <div class="card">
+  <section>
             <paper-checkbox checked="{{item.checked}}" value="[[item.label.value]]" on-change="checkBox">
-             <span class="title">[[item.label.value]]</span>
-    <span class="subtitle">[[item.result.value]]</span></paper-checkbox>
-    </p>
-            </template>
-          </dom-repeat>
+             <span class="title">[[item.label.value]]
+             <paper-icon-button icon="[[_icon(item.opened)]]" data-selector$="#collapse-[[index]]" on-tap="_toggleCollapse"></paper-icon-button></span>
+            <span class="subtitle">[[item.result.value]]</span></paper-checkbox>
+        <iron-collapse id$="collapse-[[index]]" opened="{{item.opened}}">
+            <div class="content">
+           <vaadin-text-area label="Additional Metadata" class="max-height" placeholder="Add metadata in JSON format and in case of no data write {}" name="metadata"></vaadin-text-area>
+              </div>
+          </iron-collapse>
+   </section>
+         </div>   
+          </template>
            <vaadin-button id="my-button1" on-click="registerDataset" raised>Register Checked Dataset</vaadin-button>
 </div>
 </template>
 
 
+<!--<template is="dom-if" if="[[_checkBVal(executionResults)]]">-->
+<!--<div class="card">-->
+<!--<template is="dom-repeat" items="{{executionResults}}">-->
+        <!--<section>-->
+         <!--<paper-checkbox checked="{{item.checked}}" value="[[item.label.value]]" on-change="checkBox">-->
+             <!--<span class="title">[[item.label.value]]</span>-->
+    <!--<span class="subtitle">[[item.result.value]]</span></paper-checkbox>-->
+          <!--<paper-icon-button icon="[[_icon(item.opened)]]" data-selector$="#collapse-[[index]]" on-tap="_toggleCollapse"></paper-icon-button>-->
+          <!--<iron-collapse id$="collapse-[[index]]" opened="{{item.opened}}">-->
+            <!--<div class="content">-->
+            <!--some goes-->
+              <!--</div>-->
+          <!--</iron-collapse>-->
+        <!--</section>-->
+      <!--</template>-->
+      <!--</div>-->
+      <!--</template>-->
+   
 <!--<div class="card">-->
 <!--<iron-form id="form1">-->
      <!--<form method="get" action="/foo">-->
@@ -223,6 +251,10 @@ class DatasetRegistration extends PolymerElement {
    </div>
     </template>
     
+   
+
+
+
 
       <!--<iron-ajax id="register" method="POST"-->
         <!--url="https://api.mint-data-catalog.org/datasets/register_datasets"-->
@@ -300,7 +332,7 @@ class DatasetRegistration extends PolymerElement {
         for(var i = 0; i < obj.results.bindings.length; ++i) {
             var label=obj.results.bindings[i].label;
             var result=obj.results.bindings[i].result;
-            temp.push({"label":label,"result":result,"checked":false});
+            temp.push({"label":label,"result":result,"checked":false,"metadata":""});
             // this.push('executionResults',{label:label,result:result,checked:false});
         }
         //this.push(this.executionResults,obj.results.bindings);
@@ -517,7 +549,21 @@ class DatasetRegistration extends PolymerElement {
         console.log(this.registerDatasetArray);
 
     }
+    _toggleCollapse(e){
 
+        const selector = e.target.dataset.selector || e.target.parentElement.dataset.selector;
+        if (selector) {
+            console.log(selector);
+            var some=this.shadowRoot.querySelector(selector);
+            console.log(some);
+            some.toggle();
+
+        }
+    }
+
+    _icon(e){
+        return e ? 'expand-less' : 'expand-more';
+    }
 
 }
 
