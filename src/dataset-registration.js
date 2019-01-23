@@ -42,7 +42,8 @@ class DatasetRegistration extends PolymerElement {
         errorString:String,
         runIds:Array,
         executionResults:Array,
-        registerDatasetArray:Array
+        registerDatasetArray:Array,
+        tplhtml:Object
     }
   }
   static get template() {
@@ -112,6 +113,9 @@ class DatasetRegistration extends PolymerElement {
       font-size: 0.9em;
       max-width: 150px;
     }
+    paper-input{
+    display: inline-block;
+    }
         
       </style>
    
@@ -142,19 +146,54 @@ class DatasetRegistration extends PolymerElement {
 <!--</div>-->
 
 
+ <!--<template is="dom-if" if="[[_checkBVal(executionResults)]]">-->
+ <!--<div class="card">-->
+ <!--<h1>Execution Results:</h1>-->
+  <!--<legend>Please make changes in metadata before checking the dataset.</legend>-->
+  <!--<template is="dom-repeat" items="{{executionResults}}">-->
+  <!--<div class="card">-->
+  <!--<section>-->
+  <!--<paper-icon-button icon="[[_icon(item.opened)]]" data-selector$="#collapse-[[index]]" on-tap="_toggleCollapse"></paper-icon-button>-->
+            <!--<paper-checkbox checked="{{item.checked}}" value="[[item]]" on-change="checkBox">-->
+             <!--<span class="title">[[item.label.value]]-->
+             <!--</span>-->
+            <!--<span class="subtitle">[[item.result.value]]</span></paper-checkbox>-->
+        <!--<iron-collapse id$="collapse-[[index]]" opened="{{item.opened}}">-->
+            <!--<div class="content">-->
+           <!--<vaadin-text-area value="{{item.metadata}}" label="Additional Metadata" class="max-height" placeholder="Add metadata in JSON format and in case of no data write {}" name="metadata"></vaadin-text-area>-->
+              <!--</div>-->
+          <!--</iron-collapse>-->
+   <!--</section>-->
+         <!--</div>   -->
+          <!--</template>-->
+           <!--<vaadin-button id="my-button1" on-click="registerDataset" raised>Register Checked Dataset</vaadin-button>-->
+<!--</div>-->
+<!--</template>-->
+
+
+
  <template is="dom-if" if="[[_checkBVal(executionResults)]]">
  <div class="card">
-  <h1>Execution Results:</h1>
+ <h1>Execution Results:</h1>
+  <legend>Please make changes in metadata before checking the dataset.</legend>
   <template is="dom-repeat" items="{{executionResults}}">
   <div class="card">
   <section>
-            <paper-checkbox checked="{{item.checked}}" value="[[item.label.value]]" on-change="checkBox">
+  <paper-icon-button icon="[[_icon(item.opened)]]" data-selector$="#collapse-[[index]]" on-tap="_toggleCollapse"></paper-icon-button>
+            <paper-checkbox checked="{{item.checked}}" data-selector$="#metadata-[[index]]" value="[[item]]" on-change="checkBox">
              <span class="title">[[item.label.value]]
-             <paper-icon-button icon="[[_icon(item.opened)]]" data-selector$="#collapse-[[index]]" on-tap="_toggleCollapse"></paper-icon-button></span>
+             </span>
             <span class="subtitle">[[item.result.value]]</span></paper-checkbox>
         <iron-collapse id$="collapse-[[index]]" opened="{{item.opened}}">
             <div class="content">
-           <vaadin-text-area label="Additional Metadata" class="max-height" placeholder="Add metadata in JSON format and in case of no data write {}" name="metadata"></vaadin-text-area>
+              <fieldset id$="metadata-[[index]]" class="withButton">
+           <legend>Custom Metadata<paper-icon-button data-selector$="#metadata-[[index]]" on-tap="_addMetadata" icon="add"></paper-icon-button></legend>
+        <div id="rowtemplate" class="row">
+          <paper-input label="Key"></paper-input>
+          <paper-input label="Value"></paper-input>
+          <paper-icon-button icon="cancel" on-tap="_removeRow"></paper-icon-button>
+        </div>
+        </fieldset>
               </div>
           </iron-collapse>
    </section>
@@ -273,6 +312,8 @@ class DatasetRegistration extends PolymerElement {
         this.executionResults=[];
         this.registerDatasetArray=[];
         this.push('metadata',{key:"",value:""});
+
+
     }
 
   _itemSelected(e){
@@ -366,10 +407,10 @@ class DatasetRegistration extends PolymerElement {
         for(var i = 0; i < temp; ++i) {
             var dataset= {
                 "record_id":"a7792c09-e3bc-445b-a3f1-5f01bfddb827",
-                "description":this.registerDatasetArray[i],
-                "name": this.registerDatasetArray[i],
+                "description":this.registerDatasetArray[i]['name'],
+                "name": this.registerDatasetArray[i]['name'],
                 "provenance_id": "28793fa8-9f2f-49b5-b052-7b65af9a44a0",
-                "metadata":"{}"
+                "metadata":this.registerDatasetArray[i]['metadata']
             };
             data.push(dataset);
         }
@@ -534,15 +575,21 @@ class DatasetRegistration extends PolymerElement {
     }
 
     checkBox(event){
-
+        //this._getCustomMetadata();
+        // if(event.target.value.metadata.length==0){
+        //     event.target.value.metadata="{}";
+        // }
         if(event.target.checked) {
-            this.push('registerDatasetArray',event.target.value);
+            const selector = event.target.dataset.selector || event.target.parentElement.dataset.selector;
+            var metadata=this._getCustomMetadata(selector);
+            this.push('registerDatasetArray',{"name":event.target.value.label.value,"metadata":metadata});
         }
-        else{
-            if(this.registerDatasetArray.includes(event.target.value)){
-                var index = this.registerDatasetArray.indexOf(event.target.value);
-                if (index > -1) {
-                    this.registerDatasetArray.splice(index, 1);
+        else {
+            for (var i = 0; i < this.registerDatasetArray.length; i++) {
+                if (this.registerDatasetArray[i]['name'].includes(event.target.value.label.value)) {
+                    if (i > -1) {
+                        this.registerDatasetArray.splice(i, 1);
+                    }
                 }
             }
         }
@@ -563,6 +610,40 @@ class DatasetRegistration extends PolymerElement {
 
     _icon(e){
         return e ? 'expand-less' : 'expand-more';
+    }
+
+    _removeRow(e) {
+        e.target.parentNode.remove();
+    }
+
+    _addMetadata(e) {
+        const selector = e.target.dataset.selector || e.target.parentElement.dataset.selector;
+        console.log(selector);
+        this.tplhtml = this.shadowRoot.querySelector('#rowtemplate').innerHTML;
+        console.log(this.tplhtml);
+        var div = document.createElement("div");
+        div.className = "row";
+        div.innerHTML = this.tplhtml;
+        var btn = div.querySelector("paper-icon-button");
+        btn.addEventListener("tap", this._removeRow);
+        console.log(this.shadowRoot.querySelector(selector));
+        this.shadowRoot.querySelector(selector).appendChild(div);
+
+    }
+
+    _getCustomMetadata(e) {
+        console.log(e);
+        var metadata = {};
+        var inputs = this.shadowRoot.querySelector(e).querySelectorAll("paper-input");
+        for(var i=0; i<inputs.length; i+=2) {
+            var kip = inputs[i];
+            var vip = inputs[i+1];
+            if(kip.value && vip.value)
+                metadata[kip.value] = vip.value;
+        }
+        console.log(metadata);
+        metadata=JSON.stringify(metadata);
+        return metadata;
     }
 
 }
